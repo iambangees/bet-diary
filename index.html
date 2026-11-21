@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bet Diary — your private Stake record</title>
+<meta name="description" content="A private tracker for your Stake rounds: log each slip and see your real record — win rate, profit/loss by sport and by odds range. Data stays in your browser.">
+<meta property="og:title" content="Bet Diary — your private Stake record">
+<meta property="og:description" content="Every slip, win rate and profit/loss by sport and odds range — your real record, in one place. Private: nothing leaves your browser.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="banner.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root { --bg:#0f1512; --card:#182019; --line:#2a332b; --text:#eef3ec; --muted:#9aa89b; --green:#5ec86e; --red:#ff6b5e; --yellow:#ffd23e; --blue:#6db3ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:var(--bg); color:var(--text); }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 28px 16px 56px; }
+  h1 { font-size: 34px; margin: 6px 0 2px; }
+  .tag { color: var(--muted); margin: 0 0 22px; line-height: 1.55; }
+  .hero-img { width: 100%; border-radius: 16px; border: 1px solid var(--line); margin: 4px 0 20px; display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-top: 20px; }
+  .card h2 { font-size: 19px; margin: 0 0 6px; }
+  .card p.hint { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0 0 12px; }
+  .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 14px; }
+  .stat { background:#10170f; border:1px solid var(--line); border-radius: 12px; padding: 13px 14px; }
+  .stat .k { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .stat .v { font-size: 23px; font-weight: 800; margin-top: 3px; }
+  .stat .v.pos { color: var(--green); } .stat .v.neg { color: var(--red); }
+  .stat .s { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  table { width:100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+  th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .pill { display:inline-block; padding: 2px 9px; border-radius: 20px; font-size: 12.5px; font-weight: 700; }
+  .pill.won { background:#12240f; color: var(--green); } .pill.lost { background:#2a100d; color: var(--red); }
+  .pill.refund { background:#262006; color: var(--yellow); } .pill.pending { background:#12203a; color: var(--blue); }
+  .pos { color: var(--green); font-weight: 700; } .neg { color: var(--red); font-weight: 700; }
+  .bar-row { display:flex; align-items:center; gap:10px; margin: 7px 0; font-size: 14px; }
+  .bar-row .lbl { width: 150px; flex:none; }
+  .bar-row .bar { flex:1; height: 10px; background:#10170f; border-radius: 6px; overflow:hidden; }
+  .bar-row .bar i { display:block; height:100%; background: var(--green); }
+  .bar-row .bar i.neg { background: var(--red); }
+  .bar-row .val { width: 110px; text-align:right; flex:none; font-variant-numeric: tabular-nums; }
+  label { display:block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+  input, select { width:100%; background:#0d120d; color:var(--text); border:1px solid var(--line); border-radius:10px; padding: 10px 12px; font-size: 15px; font-family: inherit; }
+  input:focus, select:focus { outline: 2px solid var(--green); border-color: transparent; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  .grid3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 14px; }
+  button { background: var(--green); color:#08130a; border:0; border-radius: 10px; padding: 12px 18px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 600; }
+  button.danger { background: transparent; color: var(--red); border: 1px solid #6e2a22; font-weight: 600; }
+  button.sm { padding: 5px 10px; font-size: 13px; border-radius: 8px; }
+  .row { display:flex; gap:10px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  .filters { display:flex; gap:8px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+  .filters select { width:auto; padding: 8px 10px; font-size: 14px; }
+  .filters input { width: 200px; padding: 8px 10px; font-size: 14px; }
+  .chip { background:#10170f; border:1px solid var(--line); color:var(--text); border-radius: 20px; padding: 7px 13px; font-size: 13.5px; font-weight: 600; cursor:pointer; }
+  .chip.on { background: var(--green); color:#08130a; border-color: var(--green); }
+  .foot { color: var(--muted); font-size: 13px; line-height: 1.6; margin-top: 30px; }
+  .note { font-size: 13px; color: var(--muted); line-height: 1.55; }
+  .empty { color: var(--muted); padding: 18px 4px; font-size: 14.5px; }
+  @media (max-width: 640px) { .grid2, .grid3 { grid-template-columns: 1fr; } .bar-row .lbl { width: 110px; } .bar-row .val { width: 84px; } table { font-size: 13px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Bet Diary</h1>
+  <p class="tag">Your private Stake record. Log each slip and see the real numbers — win rate, profit/loss by sport and by odds range — instead of remembering the wins and forgetting the losses. Everything stays in your browser: no account, no upload, nothing shared.</p>
+  <img class="hero-img" src="banner.png" alt="Bet Diary — a ledger with a rising and falling line">
+
+  <div class="card">
+    <h2>The scoreboard</h2>
+    <p class="hint">Settled bets only for win rate and ROI. Pending bets count in the stake total only once they settle — until then they sit below, marked pending.</p>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="card">
+    <h2>Where the money goes</h2>
+    <p class="hint">Profit/loss on settled bets, split two ways. Short odds win often and pay little; long odds are the bolder play — this is where you see which one actually pays you.</p>
+    <h3 style="margin:16px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">By sport</h3>
+    <div id="bySport"></div>
+    <h3 style="margin:18px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">By odds</h3>
+    <div id="byOdds"></div>
+  </div>
+
+  <div class="card">
+    <h2>Log a bet</h2>
+    <div class="grid3">
+      <div><label for="fDate">Date</label><input type="date" id="fDate"></div>
+      <div><label for="fSport">Sport</label><select id="fSport">
+        <option>Football</option><option>Basketball</option><option>Tennis</option>
+        <option>American Football</option><option>Ice Hockey</option><option>Cricket</option>
+        <option>Multi</option><option>Casino</option><option>Other</option>
+      </select></div>
+      <div><label for="fRound">Round / label (optional)</label><input type="text" id="fRound" placeholder="e.g. Round 3 · 22 Nov"></div>
+    </div>
+    <div><label for="fPick">Pick</label><input type="text" id="fPick" placeholder="e.g. Arsenal to win vs Chelsea"></div>
+    <div class="grid3">
+      <div><label for="fOdds">Odds (leave blank if none)</label><input type="number" id="fOdds" step="0.01" min="1.01" placeholder="1.85"></div>
+      <div><label for="fStake">Stake (₦)</label><input type="number" id="fStake" step="1" min="1" placeholder="10"></div>
+      <div><label for="fResult">Result</label><select id="fResult">
+        <option value="pending">Pending</option><option value="won">Won</option>
+        <option value="lost">Lost</option><option value="refund">Refunded</option>
+      </select></div>
+    </div>
+    <div><label for="fNote">Note (optional)</label><input type="text" id="fNote" placeholder="e.g. live bet, cashed out early"></div>
+    <div><label for="fRet">Amount returned (₦) — only if won/refunded and no odds above</label><input type="number" id="fRet" step="0.01" min="0" placeholder="e.g. 15.00"></div>
+    <div class="row"><button id="btnAdd">Add to the diary</button><span class="note" id="addMsg"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>Every slip</h2>
+    <div class="filters">
+      <button class="chip on" data-f="all">All</button>
+      <button class="chip" data-f="won">Won</button>
+      <button class="chip" data-f="lost">Lost</button>
+      <button class="chip" data-f="refund">Refunded</button>
+      <button class="chip" data-f="pending">Pending</button>
+      <select id="sportFilter"><option value="">All sports</option></select>
+      <input type="text" id="q" placeholder="Search picks…">
+    </div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Date</th><th>Pick</th><th class="num">Odds</th><th class="num">Stake</th><th>Result</th><th class="num">Return</th><th class="num">P/L</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+    <div class="empty" id="emptyMsg" style="display:none">Nothing matches — clear the filters or log your first bet above.</div>
+  </div>
+
+  <div class="card">
+    <h2>Your data</h2>
+    <p class="hint">The diary lives only in this browser (localStorage). Export a backup before clearing your browser data — and import it back on another device the same way.</p>
+    <div class="row">
+      <button class="ghost" id="btnExport">Export JSON</button>
+      <button class="ghost" id="btnImport">Import JSON</button>
+      <input type="file" id="fileImport" accept=".json,application/json" style="display:none">
+      <button class="ghost" id="btnReset">Restore my Nov history</button>
+      <button class="danger" id="btnClear">Clear everything</button>
+    </div>
+    <p class="note" id="dataMsg" style="margin-top:12px"></p>
+  </div>
+
+  <p class="foot">Seeded with your real Nov 6–10 rounds on the belugallary account, as recorded in chat: Round 1 (7 Nov, 5 × ₦50), Round 2 (8 Nov, 5 × ₦50), the first ₦10 spread (8 Nov, 12 bets), the Juventus live bet, the self-placed 35-leg multi, the Mines session, Spread 2 (9 Nov, 23 × ₦10), Mini-spread 1 and Mini-spread 2. Results come from public match reports and Stake checks at the time; the final balances were expected figures, not all Stake-confirmed, and your own Mines play after 9 Nov is not in here. A refund counts as its stake returned. Nothing here is a tip and no pick is a guaranteed win — the diary just shows what actually happened.</p>
+</div>
+<script>
+const KEY = 'bet-diary-v1';
+// Seed: your real rounds, 6–10 Nov 2026 (belugallary). ret = amount returned (stake included on a win/refund).
+const SEED = [
+{d:'2026-11-07',round:'Round 1 · 7 Nov',sport:'Football',pick:'Bayern to win vs Mainz',odds:1.29,stake:50,result:'won',ret:64.50},
+{d:'2026-11-07',round:'Round 1 · 7 Nov',sport:'Football',pick:'RB Leipzig to win vs Augsburg',odds:1.42,stake:50,result:'won',ret:71.00},
+{d:'2026-11-07',round:'Round 1 · 7 Nov',sport:'Football',pick:'Roma to win vs Sassuolo',odds:1.26,stake:50,result:'won',ret:63.00},
+{d:'2026-11-07',round:'Round 1 · 7 Nov',sport:'Football',pick:'Real Madrid to win vs Valencia',odds:1.22,stake:50,result:'won',ret:61.00},
+{d:'2026-11-07',round:'Round 1 · 7 Nov',sport:'Football',pick:'Man City to win vs Nottingham Forest',odds:1.70,stake:50,result:'lost',ret:0},
+{d:'2026-11-08',round:'Round 2 · 8 Nov',sport:'Football',pick:'Napoli to win vs Lazio',odds:2.13,stake:50,result:'lost',ret:0},
+{d:'2026-11-08',round:'Round 2 · 8 Nov',sport:'Football',pick:'Chelsea to win vs Sunderland',odds:1.84,stake:50,result:'lost',ret:0},
+{d:'2026-11-08',round:'Round 2 · 8 Nov',sport:'Football',pick:'AC Milan to win vs Genoa',odds:1.90,stake:50,result:'won',ret:95.00},
+{d:'2026-11-08',round:'Round 2 · 8 Nov',sport:'Football',pick:'Inter to win vs Como',odds:1.93,stake:50,result:'won',ret:96.50},
+{d:'2026-11-08',round:'Round 2 · 8 Nov',sport:'Football',pick:'Barcelona to win vs Atlético Madrid',odds:1.93,stake:50,result:'won',ret:96.50},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Football',pick:'Braga to win vs Rio Ave',odds:1.52,stake:10,result:'won',ret:15.20},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Football',pick:'Benfica to win vs Estrela',odds:1.22,stake:10,result:'won',ret:12.20},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Football',pick:'Lens to win vs Marseille',odds:2.50,stake:10,result:'lost',ret:0},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Basketball',pick:'Philadelphia 76ers to win',odds:1.40,stake:10,result:'won',ret:14.00},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Basketball',pick:'Green Bay Phoenix to win',odds:1.14,stake:10,result:'won',ret:11.40},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Basketball',pick:'Brown Bears to win',odds:1.20,stake:10,result:'won',ret:12.00},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Basketball',pick:'Tennessee Tech to win',odds:1.45,stake:10,result:'won',ret:14.50},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Basketball',pick:'Drake to win',odds:1.16,stake:10,result:'won',ret:11.60},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Basketball',pick:'Air Force to win',odds:1.55,stake:10,result:'won',ret:15.50},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Football',pick:'Unión La Calera to win',odds:2.10,stake:10,result:'won',ret:21.00},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Football',pick:'Raja Casablanca to win',odds:1.30,stake:10,result:'won',ret:13.00},
+{d:'2026-11-08',round:'Spread 1 · 8 Nov',sport:'Football',pick:'Sport Boys to win',odds:1.60,stake:10,result:'lost',ret:0},
+{d:'2026-11-08',round:'Live · 8 Nov',sport:'Football',pick:'Juventus to win at Fiorentina (live)',odds:2.30,stake:50,result:'lost',ret:0,note:'Fiorentina 2–2 Juventus'},
+{d:'2026-11-08',round:'Multi · 8 Nov',sport:'Multi',pick:'35-leg multi (self-placed)',odds:null,stake:7,result:'lost',ret:0,note:'8 legs won, 4 lost — settled as a loss'},
+{d:'2026-11-08',round:'Casino · 8 Nov',sport:'Casino',pick:'Mines — 10 rounds × ₦10',odds:null,stake:100,result:'won',ret:101.25,note:'9 cashed out @1.13x, 1 mine'},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'American Football',pick:'Green Bay Packers to win',odds:1.25,stake:10,result:'won',ret:12.50},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:'Detroit Pistons to win',odds:1.40,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:"Saint Peter's to win",odds:1.25,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:'Goiás to win',odds:1.35,stake:10,result:'won',ret:13.50},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:'Ceará to win',odds:1.95,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:'Deportivo Garcilaso to win',odds:1.55,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:'Municipal Limeño to win',odds:1.25,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:'North Dakota State to win',odds:1.55,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:'San Martín Corrientes to win',odds:1.66,stake:10,result:'won',ret:16.60},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Tennis',pick:'Blancaneaux to win',odds:1.25,stake:10,result:'won',ret:12.50},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Tennis',pick:'Artnak to win M25 Harlingen final',odds:1.22,stake:10,result:'won',ret:12.20},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Tennis',pick:'Pegula to win',odds:1.75,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Tennis',pick:'Miyoshi to win',odds:1.25,stake:10,result:'won',ret:12.50},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Ice Hockey',pick:'Tampa Bay Lightning to win',odds:1.55,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:'Millonarios to win',odds:1.78,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:'Lanús to win',odds:1.70,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:'Saprissa to win',odds:1.75,stake:10,result:'won',ret:17.50},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Football',pick:"O'Higgins to win",odds:2.35,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Cricket',pick:'Afghanistan draw no bet vs Zimbabwe',odds:1.75,stake:10,result:'refund',ret:10.00,note:'Test drawn — stake refunded'},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:'Virginia Tech to win',odds:1.35,stake:10,result:'won',ret:13.50},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:'Minnesota Timberwolves to win',odds:1.14,stake:10,result:'won',ret:11.40},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:'Dallas Mavericks to win',odds:1.33,stake:10,result:'won',ret:13.30},
+{d:'2026-11-09',round:'Spread 2 · 9 Nov',sport:'Basketball',pick:'Boston Celtics to win',odds:1.13,stake:10,result:'won',ret:11.30},
+{d:'2026-11-09',round:'Mini-spread 1 · 9 Nov',sport:'Football',pick:'1. FC Köln to beat RB Leipzig',odds:1.25,stake:10,result:'won',ret:12.50},
+{d:'2026-11-09',round:'Mini-spread 1 · 9 Nov',sport:'Football',pick:'TSC Bačka Topola to beat Javor',odds:1.50,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Mini-spread 1 · 9 Nov',sport:'Basketball',pick:'Maccabi Ashdod to beat Bnei Herzliya',odds:1.50,stake:10,result:'won',ret:15.00},
+{d:'2026-11-09',round:'Mini-spread 1 · 9 Nov',sport:'Basketball',pick:'Hapoel Eilat to beat Hapoel Beer Sheva',odds:1.30,stake:10,result:'won',ret:13.00},
+{d:'2026-11-09',round:'Mini-spread 2 · 9 Nov',sport:'Football',pick:'Técnico Universitario to win',odds:null,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Mini-spread 2 · 9 Nov',sport:'Football',pick:'União Torreense to win',odds:null,stake:10,result:'lost',ret:0},
+{d:'2026-11-09',round:'Mini-spread 2 · 9 Nov',sport:'Tennis',pick:'Mirra Andreeva to win',odds:1.50,stake:10,result:'won',ret:15.00},
+{d:'2026-11-09',round:'Mini-spread 2 · 9 Nov',sport:'Basketball',pick:'Cleveland Cavaliers to win',odds:null,stake:10,result:'lost',ret:0}
+];
+
+let bets = load();
+let filterResult = 'all';
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; } } catch (e) {}
+  const seeded = SEED.map((b, i) => ({ id: 'seed-' + i, ...b }));
+  try { localStorage.setItem(KEY, JSON.stringify(seeded)); } catch (e) {}
+  return seeded;
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(bets)); } catch (e) {} }
+const fmt = n => '₦' + Number(n).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtSigned = n => (n > 0 ? '+' : '') + fmt(n);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function retOf(b) { if (b.result === 'won') return (b.odds ? Math.round(b.stake * b.odds * 100) / 100 : (b.ret || 0)); if (b.result === 'refund') return b.stake; return 0; }
+function settled(b) { return b.result !== 'pending'; }
+function render() {
+  const s = bets.filter(settled);
+  const staked = s.reduce((a, b) => a + b.stake, 0);
+  const returned = s.reduce((a, b) => a + retOf(b), 0);
+  const pl = returned - staked;
+  const won = s.filter(b => b.result === 'won').length;
+  const lost = s.filter(b => b.result === 'lost').length;
+  const wr = (won + lost) ? Math.round(won / (won + lost) * 1000) / 10 : 0;
+  const roi = staked ? Math.round(pl / staked * 1000) / 10 : 0;
+  const pend = bets.filter(b => !settled(b)).length;
+  document.getElementById('stats').innerHTML =
+    stat('Total staked', fmt(staked), s.length + ' settled bets') +
+    stat('Returned', fmt(returned), 'incl. refunds') +
+    stat('Profit / loss', fmtSigned(pl), pl === 0 ? 'breakeven' : (pl > 0 ? 'in profit' : 'down overall'), pl > 0 ? 'pos' : (pl < 0 ? 'neg' : '')) +
+    stat('Win rate', wr + '%', won + ' won · ' + lost + ' lost') +
+    stat('ROI', (roi > 0 ? '+' : '') + roi + '%', 'return on staked') +
+    stat('Pending', String(pend), pend === 1 ? 'bet still open' : 'bets still open');
+  function stat(k, v, sub, cls) { return '<div class="stat"><div class="k">' + k + '</div><div class="v ' + (cls || '') + '">' + esc(v) + '</div><div class="s">' + esc(sub) + '</div></div>'; }
+  renderGroups('bySport', groupBy(s, b => b.sport));
+  renderGroups('byOdds', groupBy(s.filter(b => b.odds), b => !b.odds ? 'No odds' : b.odds < 1.30 ? 'Short · under 1.30' : b.odds < 2.00 ? 'Mid · 1.30–1.99' : 'Long · 2.00+'));
+  const q = (document.getElementById('q').value || '').toLowerCase();
+  const sf = document.getElementById('sportFilter').value;
+  const rows = bets.filter(b =>
+    (filterResult === 'all' || b.result === filterResult) &&
+    (!sf || b.sport === sf) &&
+    (!q || (b.pick + ' ' + (b.round || '') + ' ' + b.sport).toLowerCase().includes(q)));
+  const tb = document.getElementById('rows');
+  tb.innerHTML = rows.map(b => {
+    const r = retOf(b), p = settled(b) ? r - b.stake : null;
+    return '<tr><td style="white-space:nowrap">' + esc(b.d) + '<br><span style="color:var(--muted);font-size:12px">' + esc(b.round || '') + '</span></td>' +
+      '<td>' + esc(b.pick) + '<br><span style="color:var(--muted);font-size:12px">' + esc(b.sport) + (b.note ? ' · ' + esc(b.note) : '') + '</span></td>' +
+      '<td class="num">' + (b.odds ? b.odds.toFixed(2) : '—') + '</td>' +
+      '<td class="num">' + fmt(b.stake) + '</td>' +
+      '<td><span class="pill ' + b.result + '">' + b.result + '</span></td>' +
+      '<td class="num">' + (settled(b) ? fmt(r) : '—') + '</td>' +
+      '<td class="num ' + (p == null ? '' : p > 0 ? 'pos' : p < 0 ? 'neg' : '') + '">' + (p == null ? '—' : fmtSigned(p)) + '</td>' +
+      '<td><button class="ghost sm" data-del="' + b.id + '">✕</button></td></tr>';
+  }).join('');
+  document.getElementById('emptyMsg').style.display = rows.length ? 'none' : 'block';
+  const sports = [...new Set(bets.map(b => b.sport))].sort();
+  const sel = document.getElementById('sportFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All sports</option>' + sports.map(x => '<option' + (x === cur ? ' selected' : '') + '>' + esc(x) + '</option>').join('');
+}
+function groupBy(list, keyFn) {
+  const m = {};
+  list.forEach(b => { const k = keyFn(b); m[k] = m[k] || { n: 0, staked: 0, ret: 0, won: 0, lost: 0 }; const g = m[k]; g.n++; g.staked += b.stake; g.ret += retOf(b); if (b.result === 'won') g.won++; if (b.result === 'lost') g.lost++; });
+  return Object.entries(m).map(([k, g]) => ({ k, ...g, pl: g.ret - g.staked })).sort((a, b) => b.pl - a.pl);
+}
+function renderGroups(id, groups) {
+  const el = document.getElementById(id);
+  if (!groups.length) { el.innerHTML = '<p class="note">No settled bets in this split yet.</p>'; return; }
+  const max = Math.max(...groups.map(g => Math.abs(g.pl)), 1);
+  el.innerHTML = groups.map(g =>
+    '<div class="bar-row"><span class="lbl">' + esc(g.k) + ' <span style="color:var(--muted)">(' + g.n + ')</span></span>' +
+    '<span class="bar"><i class="' + (g.pl < 0 ? 'neg' : '') + '" style="width:' + Math.max(2, Math.abs(g.pl) / max * 100) + '%"></i></span>' +
+    '<span class="val ' + (g.pl > 0 ? 'pos' : g.pl < 0 ? 'neg' : '') + '">' + fmtSigned(g.pl) + '</span></div>').join('');
+}
+document.getElementById('fDate').value = new Date().toISOString().slice(0, 10);
+document.getElementById('btnAdd').addEventListener('click', () => {
+  const pick = document.getElementById('fPick').value.trim();
+  const stake = parseFloat(document.getElementById('fStake').value);
+  const odds = parseFloat(document.getElementById('fOdds').value);
+  const msg = document.getElementById('addMsg');
+  if (!pick) { msg.textContent = 'Add the pick first.'; return; }
+  if (!stake || stake <= 0) { msg.textContent = 'Add a stake above ₦0.'; return; }
+  const result = document.getElementById('fResult').value;
+  const retIn = parseFloat(document.getElementById('fRet').value);
+  const b = { id: 'b-' + Date.now(), d: document.getElementById('fDate').value || new Date().toISOString().slice(0, 10),
+    round: document.getElementById('fRound').value.trim(), sport: document.getElementById('fSport').value,
+    pick, odds: odds > 1 ? odds : null, stake, result, ret: 0, note: document.getElementById('fNote').value.trim() };
+  if (result === 'won') b.ret = (!isNaN(retIn) && retIn >= 0) ? retIn : (b.odds ? Math.round(stake * b.odds * 100) / 100 : 0);
+  if (result === 'refund') b.ret = stake;
+  bets.unshift(b); save(); render();
+  document.getElementById('fPick').value = ''; document.getElementById('fNote').value = ''; document.getElementById('fOdds').value = ''; document.getElementById('fRet').value = '';
+  msg.textContent = 'Logged. ' + (result === 'pending' ? 'Remember to mark it won or lost when it settles — delete it here and re-add, or edit the row below.' : 'Scoreboard updated.');
+});
+document.getElementById('rows').addEventListener('click', e => {
+  const id = e.target.getAttribute && e.target.getAttribute('data-del');
+  if (!id) return;
+  bets = bets.filter(b => b.id !== id); save(); render();
+});
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('on')); c.classList.add('on');
+  filterResult = c.getAttribute('data-f'); render();
+}));
+document.getElementById('sportFilter').addEventListener('change', render);
+document.getElementById('q').addEventListener('input', render);
+document.getElementById('btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(bets, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'bet-diary-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
+  URL.revokeObjectURL(a.href);
+  document.getElementById('dataMsg').textContent = 'Exported ' + bets.length + ' entries as JSON.';
+});
+document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileImport').click());
+document.getElementById('fileImport').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { const p = JSON.parse(r.result); if (!Array.isArray(p)) throw 0; bets = p.map((b, i) => ({ id: b.id || ('imp-' + i + '-' + Date.now()), ...b })); save(); render(); document.getElementById('dataMsg').textContent = 'Imported ' + bets.length + ' entries.'; } catch (err) { document.getElementById('dataMsg').textContent = 'That file did not look like a Bet Diary export.'; } };
+  r.readAsText(f); e.target.value = '';
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (!confirm('Replace the diary with your Nov 6–10 history (56 entries)? Any bets you logged since will be lost unless you exported first.')) return;
+  bets = SEED.map((b, i) => ({ id: 'seed-' + i, ...b })); save(); render();
+  document.getElementById('dataMsg').textContent = 'Restored the Nov history — 56 entries.';
+});
+document.getElementById('btnClear').addEventListener('click', () => {
+  if (!confirm('Delete every entry in this diary? Export a backup first if you want to keep it.')) return;
+  bets = []; save(); render();
+  document.getElementById('dataMsg').textContent = 'Diary cleared. “Restore my Nov history” brings the seed back.';
+});
+render();
+</script>
+</body>
+</html>
